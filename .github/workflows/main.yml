@@ -16,8 +16,8 @@ jobs:
 
       - name: Sync Upstream Official Repository (万能兼容版)
         env:
-          UPSTREAM_URL: https://github.com/deepseek-ai/deepseek-harness.git
-          TARGET_REPO: https://${{ secrets.GH_PAT }}@github.com/xchoox/deepseek-harness.git
+          UPSTREAM_URL: https://github.com/xchoox/desktop-cc-gui.git
+          TARGET_REPO: https://${{ secrets.GH_PAT }}@github.com/xchoox/desktop-cc-gui.git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"

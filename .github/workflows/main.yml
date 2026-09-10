@@ -1,0 +1,48 @@
+name: Sync Fork All Branches & Tags
+on:
+  schedule:
+    - cron: '0 */3 * * *' # UTC每3小时执行一次
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Sync Upstream Official Repository (万能兼容版)
+        env:
+          UPSTREAM_URL: https://github.com/deepseek-ai/deepseek-harness.git
+          TARGET_REPO: https://${{ secrets.GH_PAT }}@github.com/xchoox/deepseek-harness.git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 解决多源分支歧义
+          git config --global checkout.defaultRemote origin
+
+          # 授权远端
+          git remote set-url origin $TARGET_REPO
+          git remote add upstream $UPSTREAM_URL
+
+          # 拉取上游全部更新
+          git fetch upstream --prune --tags
+          git fetch origin
+
+          # 自动识别上游默认分支（兼容 main / master）
+          UPSTREAM_BRANCH=$(git remote show upstream | grep 'HEAD branch' | awk '{print $NF}')
+          echo "上游默认分支: $UPSTREAM_BRANCH"
+
+          # 强制对齐上游，彻底规避歧义
+          git checkout $UPSTREAM_BRANCH
+          git reset --hard upstream/$UPSTREAM_BRANCH
+
+          # 推送更新
+          git push origin $UPSTREAM_BRANCH --force
+          git push origin --tags --force
+
+          echo "✅ 通用同步完成，兼容 master/main 分支，无歧义报错"
